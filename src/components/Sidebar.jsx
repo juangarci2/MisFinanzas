@@ -60,7 +60,7 @@ export default function Sidebar({ current, onNavigate }) {
       </header>
 
       {/* ── Mobile bottom nav ── */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-slate-900 border-t border-slate-700 flex z-50 safe-area-pb">
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-slate-900 border-t border-slate-700 flex z-50">
         {links.map(({ id, label, icon: Icon }) => (
           <button key={id} onClick={() => onNavigate(id)}
             className={`flex-1 flex flex-col items-center gap-1 py-3 transition-colors ${
