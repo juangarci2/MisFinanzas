@@ -49,7 +49,16 @@ export default function Transacciones() {
     setSaving(true)
     const category = form.category === 'Otros' && form.customCategory ? form.customCategory : form.category
     const tags = form.tags ? form.tags.split(',').map(t => t.trim()).filter(Boolean) : []
-    await supabase.from('transactions').insert([{ ...form, category, amount: parseFloat(form.amount), tags, user_id: user.id }])
+    await supabase.from('transactions').insert([{
+      type: form.type,
+      amount: parseFloat(form.amount),
+      category,
+      date: form.date,
+      note: form.note,
+      is_recurring: form.is_recurring,
+      tags,
+      user_id: user.id
+    }])
     setForm(emptyForm)
     await fetchAll()
     setSaving(false)
