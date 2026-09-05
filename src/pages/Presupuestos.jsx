@@ -55,7 +55,7 @@ export default function Presupuestos() {
   const monthsElapsed = new Date().getMonth() + 1
 
   return (
-    <div className="space-y-6 max-w-3xl">
+    <div className="space-y-6 w-full max-w-3xl">
       <div>
         <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-100">Presupuestos</h2>
         <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">Límites de gasto por categoría</p>

@@ -56,7 +56,7 @@ export default function DeudasAhorros() {
   const deudas = items.filter(i => i.type === 'deuda')
 
   return (
-    <div className="space-y-6 max-w-3xl">
+    <div className="space-y-6 w-full max-w-3xl">
       <div>
         <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-100">Deudas y ahorros</h2>
         <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">Seguimiento de metas y deudas</p>

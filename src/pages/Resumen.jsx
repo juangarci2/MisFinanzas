@@ -103,7 +103,7 @@ export default function Resumen() {
   const showAlert = alertThreshold && saldo < parseFloat(alertThreshold)
 
   return (
-    <div className="space-y-6 max-w-5xl">
+    <div className="space-y-6 w-full max-w-5xl">
       {/* Alerta saldo bajo */}
       {showAlert && (
         <div className="flex items-center gap-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-xl px-4 py-3">

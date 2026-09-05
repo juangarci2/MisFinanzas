@@ -131,7 +131,7 @@ export default function Transacciones() {
   const categories = [...new Set(transactions.map(t => t.category))].sort()
 
   return (
-    <div className="space-y-6 max-w-4xl">
+    <div className="space-y-6 w-full max-w-4xl">
       <div>
         <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-100">Transacciones</h2>
         <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">Registra tus gastos e ingresos</p>

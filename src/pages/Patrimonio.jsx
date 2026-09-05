@@ -39,7 +39,7 @@ export default function Patrimonio() {
   ].filter(d => d.value > 0)
 
   return (
-    <div className="space-y-6 max-w-4xl">
+    <div className="space-y-6 w-full max-w-4xl">
       <div>
         <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-100">Patrimonio neto</h2>
         <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">Tu situación financiera global</p>

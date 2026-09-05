@@ -52,7 +52,7 @@ export default function DeudasPersonales() {
   const totalDebo = debo.filter(i => !i.paid).reduce((s, i) => s + Number(i.amount), 0)
 
   return (
-    <div className="space-y-6 max-w-3xl">
+    <div className="space-y-6 w-full max-w-3xl">
       <div>
         <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-100">Deudas personales</h2>
         <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">Lleva el control de lo que te deben y lo que debes</p>
