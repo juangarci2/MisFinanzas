@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/Auth'
+import * as XLSX from 'xlsx'
 import { Plus, Trash2, Download, RefreshCw, Search, Upload, Camera } from 'lucide-react'
 
 const CATEGORIAS = ['Alimentación','Transporte','Ocio','Salud','Hogar','Ropa','Educación','Otros']
@@ -104,8 +105,6 @@ export default function Transacciones() {
       const reader = new FileReader()
       reader.onload = (ev) => {
         try {
-          const XLSX = window._XLSX
-          if (!XLSX) { alert('Cargando librería Excel, intenta de nuevo en un momento'); return }
           const wb = XLSX.read(ev.target.result, { type: 'array' })
           const ws = wb.Sheets[wb.SheetNames[0]]
           const raw = XLSX.utils.sheet_to_json(ws, { header: 1 })
