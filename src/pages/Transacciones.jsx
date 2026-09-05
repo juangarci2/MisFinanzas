@@ -49,16 +49,17 @@ export default function Transacciones() {
     setSaving(true)
     const category = form.category === 'Otros' && form.customCategory ? form.customCategory : form.category
     const tags = form.tags ? form.tags.split(',').map(t => t.trim()).filter(Boolean) : []
-    await supabase.from('transactions').insert([{
+    const insertData = {
       type: form.type,
       amount: parseFloat(form.amount),
       category,
       date: form.date,
       note: form.note,
       is_recurring: form.is_recurring,
-      tags,
-      user_id: user.id
-    }])
+      user_id: user.id,
+    }
+    if (tags.length > 0) insertData.tags = tags
+    await supabase.from('transactions').insert([insertData])
     setForm(emptyForm)
     await fetchAll()
     setSaving(false)
@@ -94,16 +95,75 @@ export default function Transacciones() {
   function handleCSV(e) {
     const file = e.target.files[0]
     if (!file) return
-    const reader = new FileReader()
-    reader.onload = (ev) => {
-      const lines = ev.target.result.split('\n').filter(l => l.trim())
-      const rows = lines.slice(1).map(line => {
-        const cols = line.split(',')
-        return { date: cols[0]?.trim(), type: cols[1]?.trim(), category: cols[2]?.trim(), note: cols[3]?.trim(), amount: cols[4]?.trim() }
-      }).filter(r => r.date && r.amount)
-      setCsvPreview(rows)
+
+    // Detectar si es XLS o CSV
+    const isXLS = file.name.endsWith('.xls') || file.name.endsWith('.xlsx')
+
+    if (isXLS) {
+      // Usar SheetJS para leer XLS
+      const reader = new FileReader()
+      reader.onload = (ev) => {
+        try {
+          const XLSX = window._XLSX
+          if (!XLSX) { alert('Cargando librería Excel, intenta de nuevo en un momento'); return }
+          const wb = XLSX.read(ev.target.result, { type: 'array' })
+          const ws = wb.Sheets[wb.SheetNames[0]]
+          const raw = XLSX.utils.sheet_to_json(ws, { header: 1 })
+
+          // Buscar fila de cabecera
+          const headerRow = raw.findIndex(r => r.some(c => String(c).toLowerCase().includes('fecha') || String(c).toLowerCase().includes('importe')))
+          if (headerRow === -1) { alert('No se encontró la cabecera en el archivo'); return }
+
+          const headers = raw[headerRow].map(h => String(h || '').toLowerCase().trim())
+          const fechaIdx = headers.findIndex(h => h.includes('fecha') && !h.includes('valor'))
+          const conceptoIdx = headers.findIndex(h => h.includes('concepto') || h.includes('descripcion') || h.includes('descripción'))
+          const importeIdx = headers.findIndex(h => h.includes('importe'))
+
+          const rows = raw.slice(headerRow + 1)
+            .filter(r => r[fechaIdx] && r[importeIdx] !== undefined && r[importeIdx] !== '')
+            .map(r => {
+              // Parsear fecha (puede ser string DD/MM/YYYY o número serial de Excel)
+              const fechaRaw = r[fechaIdx]
+              let date = ''
+              if (typeof fechaRaw === 'number') {
+                const jsDate = new Date((fechaRaw - 25569) * 86400 * 1000)
+                date = jsDate.toISOString().split('T')[0]
+              } else if (String(fechaRaw).includes('/')) {
+                const [d, m, y] = String(fechaRaw).split('/')
+                date = `${y}-${m.padStart(2,'0')}-${d.padStart(2,'0')}`
+              } else {
+                date = String(fechaRaw).trim()
+              }
+
+              // Parsear importe (puede tener . como separador de miles y , como decimal)
+              const importeRaw = String(r[importeIdx] || '').replace(/\./g, '').replace(',', '.')
+              const amount = Math.abs(parseFloat(importeRaw) || 0)
+              const type = parseFloat(importeRaw) >= 0 ? 'ingreso' : 'gasto'
+              const note = conceptoIdx >= 0 ? String(r[conceptoIdx] || '').trim() : ''
+
+              return { date, amount: amount.toFixed(2), type, note, category: 'Otros' }
+            })
+            .filter(r => r.amount > 0)
+
+          setCsvPreview(rows)
+        } catch (err) {
+          alert('Error leyendo el archivo: ' + err.message)
+        }
+      }
+      reader.readAsArrayBuffer(file)
+    } else {
+      // CSV normal
+      const reader = new FileReader()
+      reader.onload = (ev) => {
+        const lines = ev.target.result.split('\n').filter(l => l.trim())
+        const rows = lines.slice(1).map(line => {
+          const cols = line.split(',')
+          return { date: cols[0]?.trim(), type: cols[1]?.trim(), category: cols[2]?.trim(), note: cols[3]?.trim(), amount: cols[4]?.trim() }
+        }).filter(r => r.date && r.amount)
+        setCsvPreview(rows)
+      }
+      reader.readAsText(file)
     }
-    reader.readAsText(file)
     e.target.value = ''
   }
 
@@ -115,7 +175,6 @@ export default function Transacciones() {
       note: r.note || '',
       amount: parseFloat(r.amount) || 0,
       date: r.date,
-      tags: [],
       is_recurring: false,
       user_id: user.id
     }))
@@ -276,7 +335,7 @@ export default function Transacciones() {
           <option value="">Todas las categorías</option>
           {categories.map(c => <option key={c} value={c}>{c}</option>)}
         </select>
-        <input type="file" ref={fileRef} accept=".csv" onChange={handleCSV} className="hidden" />
+        <input type="file" ref={fileRef} accept=".csv,.xls,.xlsx" onChange={handleCSV} className="hidden" />
         <button onClick={() => fileRef.current.click()} className="flex items-center gap-2 border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 px-3 py-2 rounded-lg text-sm font-medium transition-colors">
           <Upload size={15} /> Importar CSV
         </button>
