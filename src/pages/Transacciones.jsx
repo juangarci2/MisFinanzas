@@ -134,10 +134,19 @@ export default function Transacciones() {
                 date = String(fechaRaw).trim()
               }
 
-              // Parsear importe (puede tener . como separador de miles y , como decimal)
-              const importeRaw = String(r[importeIdx] || '').replace(/\./g, '').replace(',', '.')
-              const amount = Math.abs(parseFloat(importeRaw) || 0)
-              const type = parseFloat(importeRaw) >= 0 ? 'ingreso' : 'gasto'
+              // Parsear importe (número real o string con formato español: 1.234,56)
+              const importeVal = r[importeIdx]
+              let importeNum = 0
+              if (typeof importeVal === 'number') {
+                importeNum = importeVal
+              } else {
+                const str = String(importeVal || '').trim()
+                // Quitar puntos de miles y convertir coma decimal a punto
+                const clean = str.replace(/\./g, '').replace(',', '.')
+                importeNum = parseFloat(clean) || 0
+              }
+              const amount = Math.abs(importeNum).toFixed(2)
+              const type = importeNum >= 0 ? 'ingreso' : 'gasto'
               const note = conceptoIdx >= 0 ? String(r[conceptoIdx] || '').trim() : ''
 
               return { date, amount: amount.toFixed(2), type, note, category: 'Otros' }
