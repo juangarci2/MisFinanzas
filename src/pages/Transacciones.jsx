@@ -304,7 +304,9 @@ export default function Transacciones() {
               </tbody>
             </table>
           )}
+        </div>
       </div>
     </div>
   )
 }
+
