@@ -109,7 +109,16 @@ export default function Transacciones() {
 
   async function confirmCSVImport() {
     if (!csvPreview?.length) return
-    const toInsert = csvPreview.map(r => ({ date: r.date, type: r.type || 'gasto', category: r.category || 'Otros', note: r.note || '', amount: parseFloat(r.amount) || 0, user_id: user.id }))
+    const toInsert = csvPreview.map(r => ({
+      type: r.type === 'ingreso' ? 'ingreso' : 'gasto',
+      category: r.category || 'Otros',
+      note: r.note || '',
+      amount: parseFloat(r.amount) || 0,
+      date: r.date,
+      tags: [],
+      is_recurring: false,
+      user_id: user.id
+    }))
     await supabase.from('transactions').insert(toInsert)
     setCsvPreview(null)
     fetchAll()
