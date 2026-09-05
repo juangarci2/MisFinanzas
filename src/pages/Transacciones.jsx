@@ -138,7 +138,7 @@ export default function Transacciones() {
       </div>
 
       <form onSubmit={handleSubmit} className="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-slate-700 space-y-4">
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-1 block">Tipo</label>
             <select value={form.type} onChange={e => setForm({ ...form, type: e.target.value })}
@@ -174,7 +174,7 @@ export default function Transacciones() {
               className="w-full border border-slate-200 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400" />
           </div>
         )}
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-1 block">Nota (opcional)</label>
             <input type="text" placeholder="Descripción..." value={form.note}
@@ -268,6 +268,7 @@ export default function Transacciones() {
       </div>
 
       <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-hidden">
+        <div className="overflow-x-auto">
         {loading ? <p className="p-6 text-slate-400 text-sm">Cargando...</p>
           : filtered.length === 0 ? <p className="p-6 text-slate-400 text-sm">Sin transacciones.</p>
           : (

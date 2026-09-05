@@ -33,9 +33,9 @@ function AppContent() {
   if (!user) return <Login />
 
   return (
-    <div className="flex h-screen overflow-hidden bg-slate-50 dark:bg-slate-950">
+    <div className="flex flex-col md:flex-row h-screen overflow-hidden bg-slate-50 dark:bg-slate-950">
       <Sidebar current={page} onNavigate={setPage} />
-      <main className="flex-1 overflow-y-auto p-8">
+      <main className="flex-1 overflow-y-auto p-4 md:p-8 pb-24 md:pb-8">
         <PageComponent />
       </main>
     </div>

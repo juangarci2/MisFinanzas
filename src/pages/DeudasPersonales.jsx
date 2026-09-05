@@ -59,7 +59,7 @@ export default function DeudasPersonales() {
       </div>
 
       {/* Resumen */}
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="bg-emerald-50 dark:bg-emerald-900/20 rounded-2xl p-5 border border-emerald-100 dark:border-emerald-800">
           <p className="text-xs font-medium text-emerald-600 dark:text-emerald-400 mb-1">Me deben</p>
           <p className="text-3xl font-bold text-emerald-600">+{totalMeDeben.toFixed(2)} €</p>
@@ -72,7 +72,7 @@ export default function DeudasPersonales() {
 
       {/* Formulario */}
       <form onSubmit={handleSubmit} className="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-slate-700 space-y-4">
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-1 block">Nombre</label>
             <input type="text" placeholder="Ej: Carlos, María..." value={form.person}

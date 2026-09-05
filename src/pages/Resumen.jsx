@@ -158,7 +158,7 @@ export default function Resumen() {
 
       {/* Quick add */}
       {showQuickAdd && (
-        <form onSubmit={handleQuickAdd} className="bg-white dark:bg-slate-800 rounded-2xl p-4 shadow-sm border border-slate-100 dark:border-slate-700 flex flex-wrap gap-3 items-end">
+        <form onSubmit={handleQuickAdd} className="bg-white dark:bg-slate-800 rounded-2xl p-4 shadow-sm border border-slate-100 dark:border-slate-700 flex flex-wrap gap-3 items-end w-full">
           <div>
             <label className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-1 block">Tipo</label>
             <select value={qaForm.type} onChange={e => setQaForm({ ...qaForm, type: e.target.value })}
@@ -196,7 +196,7 @@ export default function Resumen() {
       )}
 
       {/* Tarjetas */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Card label="Ingresos" value={ingresos} icon={<TrendingUp size={20} />} color="text-emerald-600" bg="bg-emerald-50 dark:bg-emerald-900/20" />
         <Card label="Gastos" value={gastos} icon={<TrendingDown size={20} />} color="text-red-500" bg="bg-red-50 dark:bg-red-900/20" />
         <Card label="Saldo" value={saldo} icon={<Wallet size={20} />}
@@ -218,7 +218,7 @@ export default function Resumen() {
 
       {/* Gráficas del mes */}
       {chartData.length > 0 && (
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-slate-700">
             <h3 className="text-sm font-semibold text-slate-600 dark:text-slate-300 mb-4">Gastos por categoría</h3>
             <ResponsiveContainer width="100%" height={200}>

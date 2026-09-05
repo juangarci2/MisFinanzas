@@ -51,7 +51,7 @@ export default function Patrimonio() {
         <p className="text-white/60 text-xs mt-2">{patrimonio >= 0 ? '✓ Situación positiva' : '⚠ Patrimonio negativo'}</p>
       </div>
 
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <PatCard label="Cuenta corriente" value={saldoCuenta} icon={<Building2 size={20} />} color={saldoCuenta >= 0 ? 'text-blue-600' : 'text-red-500'} bg="bg-blue-50 dark:bg-blue-900/20" />
         <PatCard label="Total ahorros" value={ahorros} icon={<PiggyBank size={20} />} color="text-emerald-600" bg="bg-emerald-50 dark:bg-emerald-900/20" />
         <PatCard label="Deuda restante" value={deudas} icon={<CreditCard size={20} />} color={deudas > 0 ? 'text-red-500' : 'text-slate-400'} bg="bg-red-50 dark:bg-red-900/20" negative />

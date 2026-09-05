@@ -63,7 +63,7 @@ export default function Presupuestos() {
 
       {/* Formulario */}
       <form onSubmit={handleSubmit} className="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-slate-700">
-        <div className="flex gap-3 flex-wrap">
+        <div className="flex flex-col sm:flex-row gap-3">
           <select value={form.category} onChange={e => setForm({ ...form, category: e.target.value, customCategory: '' })}
             className="flex-1 border border-slate-200 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400">
             {CATEGORIAS.map(c => <option key={c}>{c}</option>)}

@@ -63,7 +63,7 @@ export default function DeudasAhorros() {
       </div>
 
       <form onSubmit={handleSubmit} className="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-slate-700 space-y-4">
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-1 block">Nombre</label>
             <input type="text" placeholder="Ej: Fondo de emergencia" value={form.name}
