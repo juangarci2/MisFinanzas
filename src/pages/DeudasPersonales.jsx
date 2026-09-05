@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
+import { useAuth } from '../context/Auth'
 import { Plus, Trash2, Check } from 'lucide-react'
 
 const emptyForm = { person: '', amount: '', direction: 'me_deben', note: '' }
@@ -7,6 +8,7 @@ const emptyForm = { person: '', amount: '', direction: 'me_deben', note: '' }
 export default function DeudasPersonales() {
   const [items, setItems] = useState([])
   const [form, setForm] = useState(emptyForm)
+  const { user } = useAuth()
   const [saving, setSaving] = useState(false)
   const [loading, setLoading] = useState(true)
 
@@ -22,7 +24,7 @@ export default function DeudasPersonales() {
     e.preventDefault()
     if (!form.person || !form.amount) return
     setSaving(true)
-    await supabase.from('personal_debts').insert([{
+    await supabase.from('personal_debts').insert([{ user_id: user.id,
       person: form.person,
       amount: parseFloat(form.amount),
       direction: form.direction,

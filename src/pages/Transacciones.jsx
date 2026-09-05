@@ -1,10 +1,12 @@
 import { useEffect, useState, useRef } from 'react'
 import { supabase } from '../lib/supabase'
+import { useAuth } from '../context/Auth'
 import { Plus, Trash2, Download, RefreshCw, Search, Upload, Camera } from 'lucide-react'
 
 const CATEGORIAS = ['Alimentación','Transporte','Ocio','Salud','Hogar','Ropa','Educación','Otros']
 const emptyForm = { type: 'gasto', amount: '', category: 'Alimentación', customCategory: '', date: new Date().toISOString().split('T')[0], note: '', is_recurring: false, tags: '' }
-const SUPABASE_URL = 'https://dotojyomutqkqhknmvsc.supabase.co'
+const { user } = useAuth()
+  const SUPABASE_URL = 'https://dotojyomutqkqhknmvsc.supabase.co'
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRvdG9qeW9tdXRxa3Foa25tdnNjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgwNzY0NDEsImV4cCI6MjEwMzY1MjQ0MX0.UQb46FEVsD15GMOHPtONNj567PVUkgEvwSwaM7Q7Yvw'
 
 export default function Transacciones() {
@@ -47,7 +49,7 @@ export default function Transacciones() {
     setSaving(true)
     const category = form.category === 'Otros' && form.customCategory ? form.customCategory : form.category
     const tags = form.tags ? form.tags.split(',').map(t => t.trim()).filter(Boolean) : []
-    await supabase.from('transactions').insert([{ ...form, category, amount: parseFloat(form.amount), tags }])
+    await supabase.from('transactions').insert([{ ...form, category, amount: parseFloat(form.amount), tags, user_id: user.id }])
     setForm(emptyForm)
     await fetchAll()
     setSaving(false)

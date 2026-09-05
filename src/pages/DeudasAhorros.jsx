@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
+import { useAuth } from '../context/Auth'
 import { Plus, Trash2 } from 'lucide-react'
 
 const emptyForm = { name: '', type: 'ahorro', goal: '', current: '' }
@@ -7,6 +8,7 @@ const emptyForm = { name: '', type: 'ahorro', goal: '', current: '' }
 export default function DeudasAhorros() {
   const [items, setItems] = useState([])
   const [form, setForm] = useState(emptyForm)
+  const { user } = useAuth()
   const [saving, setSaving] = useState(false)
   const [loading, setLoading] = useState(true)
   const [monthlyRates, setMonthlyRates] = useState({})
@@ -23,7 +25,7 @@ export default function DeudasAhorros() {
     e.preventDefault()
     if (!form.name || !form.goal) return
     setSaving(true)
-    await supabase.from('debts_savings').insert([{ name: form.name, type: form.type, goal: parseFloat(form.goal), current: parseFloat(form.current || 0) }])
+    await supabase.from('debts_savings').insert([{ user_id: user.id, name: form.name, type: form.type, goal: parseFloat(form.goal), current: parseFloat(form.current || 0) }])
     setForm(emptyForm)
     await fetchAll()
     setSaving(false)

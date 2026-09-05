@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
+import { useAuth } from '../context/Auth'
 import { Plus, Trash2, AlertTriangle, AlertCircle } from 'lucide-react'
 
 const CATEGORIAS = ['Alimentación','Transporte','Ocio','Salud','Hogar','Ropa','Educación','Otros']
@@ -9,6 +10,7 @@ export default function Presupuestos() {
   const [spent, setSpent] = useState({})
   const [annualSpent, setAnnualSpent] = useState({})
   const [form, setForm] = useState({ category: 'Alimentación', customCategory: '', monthly_limit: '' })
+  const { user } = useAuth()
   const [saving, setSaving] = useState(false)
   const [view, setView] = useState('mensual')
 
@@ -37,7 +39,7 @@ export default function Presupuestos() {
     if (!form.monthly_limit) return
     setSaving(true)
     const category = form.category === 'Otros' && form.customCategory ? form.customCategory : form.category
-    await supabase.from('budgets').upsert([{ category, monthly_limit: parseFloat(form.monthly_limit) }], { onConflict: 'category' })
+    await supabase.from('budgets').upsert([{ category, monthly_limit: parseFloat(form.monthly_limit), user_id: user.id }], { onConflict: 'category' })
     setForm({ category: 'Alimentación', customCategory: '', monthly_limit: '' })
     await fetchAll()
     setSaving(false)

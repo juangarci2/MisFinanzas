@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
+import { useAuth } from '../context/Auth'
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell,
   PieChart, Pie, Legend, LineChart, Line, CartesianGrid,
@@ -19,6 +20,7 @@ export default function Resumen() {
   const [showQuickAdd, setShowQuickAdd] = useState(false)
   const [showAlertConfig, setShowAlertConfig] = useState(false)
   const [qaForm, setQaForm] = useState({ type: 'gasto', amount: '', category: 'Alimentación', customCategory: '' })
+  const { user } = useAuth()
   const [saving, setSaving] = useState(false)
   const [alertThreshold, setAlertThreshold] = useState(() => {
     try { return localStorage.getItem('alert_threshold') || '' } catch { return '' }
@@ -68,7 +70,7 @@ export default function Resumen() {
     if (!qaForm.amount) return
     setSaving(true)
     const category = qaForm.category === 'Otros' && qaForm.customCategory ? qaForm.customCategory : qaForm.category
-    await supabase.from('transactions').insert([{ type: qaForm.type, amount: parseFloat(qaForm.amount), category, date: new Date().toISOString().split('T')[0] }])
+    await supabase.from('transactions').insert([{ user_id: user.id, type: qaForm.type, amount: parseFloat(qaForm.amount), category, date: new Date().toISOString().split('T')[0] }])
     setQaForm({ type: 'gasto', amount: '', category: 'Alimentación', customCategory: '' })
     setShowQuickAdd(false); setSaving(false)
     fetchTransactions(); fetchLineData()
