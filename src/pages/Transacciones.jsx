@@ -138,10 +138,9 @@ export default function Transacciones() {
               const importeVal = r[importeIdx]
               let importeNum = 0
               if (typeof importeVal === 'number') {
-                importeNum = importeVal
+                importeNum = isNaN(importeVal) ? 0 : importeVal
               } else {
                 const str = String(importeVal || '').trim()
-                // Quitar puntos de miles y convertir coma decimal a punto
                 const clean = str.replace(/\./g, '').replace(',', '.')
                 importeNum = parseFloat(clean) || 0
               }
