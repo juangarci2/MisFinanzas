@@ -78,7 +78,10 @@ export default function Transacciones() {
     const reader = new FileReader()
     reader.onload = async (ev) => {
       try {
-        const base64 = ev.target.result.split(',')[1]
+        const dataUrl = ev.target.result
+        if (!dataUrl || !dataUrl.includes(',')) throw new Error('Error leyendo la imagen')
+        const base64 = dataUrl.split(',')[1]
+        if (!base64 || base64.length < 100) throw new Error('Imagen demasiado pequeña o vacía')
         const { data: { session } } = await supabase.auth.getSession()
         const token = session?.access_token || SUPABASE_ANON_KEY
         const res = await fetch(`${SUPABASE_URL}/functions/v1/analyze-ticket`, {
