@@ -75,21 +75,28 @@ export default function Transacciones() {
     const file = e.target.files[0]
     if (!file) return
     setAnalyzing(true)
-    try {
-      const reader = new FileReader()
-      reader.onload = async (ev) => {
+    const reader = new FileReader()
+    reader.onload = async (ev) => {
+      try {
         const base64 = ev.target.result.split(',')[1]
+        const { data: { session } } = await supabase.auth.getSession()
+        const token = session?.access_token || SUPABASE_ANON_KEY
         const res = await fetch(`${SUPABASE_URL}/functions/v1/analyze-ticket`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` },
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
           body: JSON.stringify({ image: base64, mediaType: file.type })
         })
+        if (!res.ok) throw new Error(`Error ${res.status}: ${await res.text()}`)
         const data = await res.json()
         if (data.amount) setForm(f => ({ ...f, amount: String(data.amount), category: data.category || f.category, note: data.note || f.note }))
+        else alert('No se detectó importe en el ticket')
+      } catch (err) {
+        alert('Error analizando el ticket: ' + err.message)
+      } finally {
         setAnalyzing(false)
       }
-      reader.readAsDataURL(file)
-    } catch { setAnalyzing(false) }
+    }
+    reader.readAsDataURL(file)
     e.target.value = ''
   }
 
