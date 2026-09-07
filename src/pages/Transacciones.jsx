@@ -105,9 +105,9 @@ export default function Transacciones() {
       const reader = new FileReader()
       reader.onload = (ev) => {
         try {
-          const wb = XLSX.read(ev.target.result, { type: 'array' })
+          const wb = XLSX.read(ev.target.result, { type: 'array', raw: false })
           const ws = wb.Sheets[wb.SheetNames[0]]
-          const raw = XLSX.utils.sheet_to_json(ws, { header: 1 })
+          const raw = XLSX.utils.sheet_to_json(ws, { header: 1, raw: false, defval: '' })
 
           // Buscar fila de cabecera
           const headerRow = raw.findIndex(r => r.some(c => String(c).toLowerCase().includes('fecha') || String(c).toLowerCase().includes('importe')))
@@ -121,36 +121,24 @@ export default function Transacciones() {
           const rows = raw.slice(headerRow + 1)
             .filter(r => r[fechaIdx] && r[importeIdx] !== undefined && r[importeIdx] !== '')
             .map(r => {
-              // Parsear fecha (puede ser string DD/MM/YYYY o número serial de Excel)
-              const fechaRaw = r[fechaIdx]
-              let date = ''
-              if (typeof fechaRaw === 'number') {
-                const jsDate = new Date((fechaRaw - 25569) * 86400 * 1000)
-                date = jsDate.toISOString().split('T')[0]
-              } else if (String(fechaRaw).includes('/')) {
-                const [d, m, y] = String(fechaRaw).split('/')
-                date = `${y}-${m.padStart(2,'0')}-${d.padStart(2,'0')}`
-              } else {
-                date = String(fechaRaw).trim()
+              // Parsear fecha DD/MM/YYYY (raw:false siempre da string)
+              const fechaStr = String(r[fechaIdx] || '').trim()
+              let date = fechaStr
+              if (fechaStr.includes('/')) {
+                const [d, m, y] = fechaStr.split('/')
+                date = `${y.length === 2 ? '20'+y : y}-${m.padStart(2,'0')}-${d.padStart(2,'0')}`
               }
 
-              // Parsear importe (número real o string con formato español: 1.234,56)
-              const importeVal = r[importeIdx]
-              let importeNum = 0
-              if (typeof importeVal === 'number') {
-                importeNum = isNaN(importeVal) ? 0 : importeVal
-              } else {
-                const str = String(importeVal || '').trim()
-                const clean = str.replace(/\./g, '').replace(',', '.')
-                importeNum = parseFloat(clean) || 0
-              }
+              // Parsear importe: todo viene como string con raw:false
+              const importeStr = String(r[importeIdx] || '').trim().replace(/\./g, '').replace(',', '.')
+              const importeNum = parseFloat(importeStr) || 0
               const amount = Math.abs(importeNum).toFixed(2)
               const type = importeNum >= 0 ? 'ingreso' : 'gasto'
               const note = conceptoIdx >= 0 ? String(r[conceptoIdx] || '').trim() : ''
 
-              return { date, amount: amount.toFixed(2), type, note, category: 'Otros' }
+              return { date, amount, type, note, category: 'Otros' }
             })
-            .filter(r => r.amount > 0)
+            .filter(r => parseFloat(r.amount) > 0 && r.date)
 
           setCsvPreview(rows)
         } catch (err) {
