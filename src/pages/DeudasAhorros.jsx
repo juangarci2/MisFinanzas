@@ -31,12 +31,12 @@ export default function DeudasAhorros() {
 
   async function handleSubmit(e) {
     e.preventDefault()
-    if (!form.name || !form.goal) return
+    if (!form.name) return
     setSaving(true)
     const { data } = await supabase.from('debts_savings').insert([{
       name: form.name,
       type: form.type,
-      goal: parseFloat(form.goal),
+      goal: parseFloat(form.goal || 0),
       current: parseFloat(form.current || 0),
       annual_rate: parseFloat(form.annual_rate || 0),
       user_id: user.id
@@ -132,7 +132,7 @@ export default function DeudasAhorros() {
             <label className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-1 block">{form.type === 'ahorro' ? 'Meta (€)' : 'Total deuda (€)'}</label>
             <input type="number" step="0.01" min="0" placeholder="0.00" value={form.goal}
               onChange={e => setForm({ ...form, goal: e.target.value })}
-              className="w-full border border-slate-200 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400" required />
+              className="w-full border border-slate-200 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400" />
           </div>
           <div>
             <label className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-1 block">Saldo actual (€)</label>
