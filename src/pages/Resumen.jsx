@@ -5,7 +5,7 @@ import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell,
   PieChart, Pie, Legend, LineChart, Line, CartesianGrid,
 } from 'recharts'
-import { TrendingUp, TrendingDown, Wallet, ChevronLeft, ChevronRight, Plus, X, AlertTriangle, Settings } from 'lucide-react'
+import { TrendingUp, TrendingDown, Wallet, ChevronLeft, ChevronRight, Plus, X, AlertTriangle, Settings, Building2 } from 'lucide-react'
 
 const COLORS = ['#10b981','#3b82f6','#f59e0b','#ef4444','#8b5cf6','#ec4899','#14b8a6','#f97316']
 const CATEGORIAS = ['Alimentación','Transporte','Ocio','Salud','Hogar','Ropa','Educación','Otros']
@@ -13,25 +13,47 @@ const NEEDS = ['Alimentación','Transporte','Hogar','Salud']
 const WANTS = ['Ocio','Ropa','Educación','Otros']
 
 export default function Resumen() {
+  const { user } = useAuth()
   const [transactions, setTransactions] = useState([])
+  const [allTransactions, setAllTransactions] = useState([])
   const [lineData, setLineData] = useState([])
   const [loading, setLoading] = useState(true)
   const [selectedDate, setSelectedDate] = useState(new Date())
   const [showQuickAdd, setShowQuickAdd] = useState(false)
   const [showAlertConfig, setShowAlertConfig] = useState(false)
+  const [showCuentaConfig, setShowCuentaConfig] = useState(false)
   const [qaForm, setQaForm] = useState({ type: 'gasto', amount: '', category: 'Alimentación', customCategory: '' })
-  const { user } = useAuth()
   const [saving, setSaving] = useState(false)
+  const [saldoInicial, setSaldoInicial] = useState(null)
+  const [saldoInicialInput, setSaldoInicialInput] = useState('')
   const [alertThreshold, setAlertThreshold] = useState(() => {
     try { return localStorage.getItem('alert_threshold') || '' } catch { return '' }
   })
   const [alertInput, setAlertInput] = useState(alertThreshold)
 
   useEffect(() => { fetchTransactions() }, [selectedDate])
-  useEffect(() => { fetchLineData() }, [])
+  useEffect(() => { fetchLineData(); fetchSaldoInicial(); fetchAllTransactions() }, [])
 
   function firstDay(d) { return new Date(d.getFullYear(), d.getMonth(), 1).toISOString().split('T')[0] }
   function lastDay(d) { return new Date(d.getFullYear(), d.getMonth() + 1, 0).toISOString().split('T')[0] }
+
+  async function fetchSaldoInicial() {
+    const { data } = await supabase.from('settings').select('value').eq('key', 'saldo_inicial').single()
+    if (data) { setSaldoInicial(parseFloat(data.value)); setSaldoInicialInput(data.value) }
+    else { setSaldoInicial(0) }
+  }
+
+  async function saveSaldoInicial() {
+    const val = parseFloat(saldoInicialInput) || 0
+    await supabase.from('settings').upsert([{ user_id: user.id, key: 'saldo_inicial', value: String(val) }])
+    setSaldoInicial(val)
+    setShowCuentaConfig(false)
+  }
+
+  async function fetchAllTransactions() {
+    const { data } = await supabase.from('transactions').select('type, amount')
+    setAllTransactions(data || [])
+  }
 
   async function fetchTransactions() {
     setLoading(true)
@@ -73,7 +95,7 @@ export default function Resumen() {
     await supabase.from('transactions').insert([{ user_id: user.id, type: qaForm.type, amount: parseFloat(qaForm.amount), category, date: new Date().toISOString().split('T')[0] }])
     setQaForm({ type: 'gasto', amount: '', category: 'Alimentación', customCategory: '' })
     setShowQuickAdd(false); setSaving(false)
-    fetchTransactions(); fetchLineData()
+    fetchTransactions(); fetchLineData(); fetchAllTransactions()
   }
 
   function saveAlert() {
@@ -85,6 +107,10 @@ export default function Resumen() {
   const ingresos = transactions.filter(t => t.type === 'ingreso').reduce((s, t) => s + Number(t.amount), 0)
   const gastos = transactions.filter(t => t.type === 'gasto').reduce((s, t) => s + Number(t.amount), 0)
   const saldo = ingresos - gastos
+
+  const totalIngresosHistorico = allTransactions.filter(t => t.type === 'ingreso').reduce((s, t) => s + Number(t.amount), 0)
+  const totalGastosHistorico = allTransactions.filter(t => t.type === 'gasto').reduce((s, t) => s + Number(t.amount), 0)
+  const saldoCuenta = (saldoInicial || 0) + totalIngresosHistorico - totalGastosHistorico
 
   const byCategory = transactions.filter(t => t.type === 'gasto').reduce((acc, t) => {
     acc[t.category] = (acc[t.category] || 0) + Number(t.amount); return acc
@@ -126,6 +152,10 @@ export default function Resumen() {
           </button>
         </div>
         <div className="flex gap-2">
+          <button onClick={() => setShowCuentaConfig(v => !v)}
+            className="flex items-center gap-2 border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 px-3 py-2 rounded-lg text-sm font-medium transition-colors">
+            <Building2 size={15} /> Cuenta principal
+          </button>
           <button onClick={() => setShowAlertConfig(v => !v)}
             className="flex items-center gap-2 border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 px-3 py-2 rounded-lg text-sm font-medium transition-colors">
             <Settings size={15} /> Alerta saldo
@@ -194,6 +224,30 @@ export default function Resumen() {
           </button>
         </form>
       )}
+
+      {/* Config cuenta principal */}
+      {showCuentaConfig && (
+        <div className="bg-white dark:bg-slate-800 rounded-2xl p-4 shadow-sm border border-slate-100 dark:border-slate-700 flex items-end gap-3">
+          <div>
+            <label className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-1 block">Saldo inicial de tu cuenta (€)</label>
+            <p className="text-xs text-slate-400 mb-2">Lo que tenías en el banco antes de empezar a registrar en la app.</p>
+            <input type="number" step="0.01" min="0" placeholder="Ej: 1500.00" value={saldoInicialInput}
+              onChange={e => setSaldoInicialInput(e.target.value)}
+              className="w-44 border border-slate-200 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400" />
+          </div>
+          <button onClick={saveSaldoInicial} className="bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">Guardar</button>
+        </div>
+      )}
+
+      {/* Tarjeta cuenta principal */}
+      <div className={`rounded-2xl p-5 border shadow-sm flex items-center justify-between ${saldoCuenta >= 0 ? 'bg-gradient-to-r from-emerald-500 to-emerald-600 border-emerald-400' : 'bg-gradient-to-r from-red-500 to-red-600 border-red-400'}`}>
+        <div>
+          <p className="text-white/80 text-xs font-medium flex items-center gap-1.5 mb-1"><Building2 size={14} /> Cuenta principal</p>
+          <p className="text-3xl font-bold text-white">{saldoCuenta.toFixed(2)} €</p>
+          <p className="text-white/60 text-xs mt-1">Saldo inicial {(saldoInicial || 0).toFixed(2)} € + movimientos registrados</p>
+        </div>
+        <Wallet size={40} className="text-white/20" />
+      </div>
 
       {/* Tarjetas */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
