@@ -4,7 +4,7 @@ import { useAuth } from '../context/Auth'
 import { Plus, Trash2, TrendingUp } from 'lucide-react'
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts'
 
-const emptyForm = { name: '', type: 'ahorro', goal: '', current: '', annual_rate: '' }
+const emptyForm = { name: '', type: 'ahorro', goal: '', current: '', annual_rate: '', charge_day: '', monthly_payment: '' }
 
 export default function DeudasAhorros() {
   const { user } = useAuth()
@@ -16,7 +16,45 @@ export default function DeudasAhorros() {
   const [history, setHistory] = useState({})
   const [expandedId, setExpandedId] = useState(null)
 
-  useEffect(() => { fetchAll() }, [])
+  useEffect(() => { fetchAll().then(processAutoCharges) }, [])
+
+  async function processAutoCharges() {
+    const now = new Date()
+    const today = now.getDate()
+    const yearMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
+    const key = `debt_charges_${yearMonth}`
+    if (localStorage.getItem(key)) return
+
+    const { data: debts } = await supabase.from('debts_savings')
+      .select('*').eq('type', 'deuda').not('charge_day', 'is', null).gt('monthly_payment', 0)
+
+    if (!debts?.length) { localStorage.setItem(key, 'true'); return }
+
+    const toCharge = debts.filter(d => today >= d.charge_day)
+    for (const debt of toCharge) {
+      const chargeDate = new Date(now.getFullYear(), now.getMonth(), debt.charge_day)
+        .toISOString().split('T')[0]
+      // Verificar que no se haya cargado ya este mes
+      const { data: existing } = await supabase.from('transactions')
+        .select('id').eq('note', `Cargo automático: ${debt.name}`).gte('date', `${yearMonth}-01`).lte('date', `${yearMonth}-31`)
+      if (!existing?.length) {
+        await supabase.from('transactions').insert([{
+          type: 'gasto',
+          amount: debt.monthly_payment,
+          category: 'Otros',
+          date: chargeDate,
+          note: `Cargo automático: ${debt.name}`,
+          user_id: user.id
+        }])
+        // Actualizar saldo pagado de la deuda
+        await supabase.from('debts_savings').update({
+          current: Math.min(Number(debt.current) + Number(debt.monthly_payment), Number(debt.goal))
+        }).eq('id', debt.id)
+      }
+    }
+    localStorage.setItem(key, 'true')
+    await fetchAll()
+  }
 
   async function fetchAll() {
     const { data } = await supabase.from('debts_savings').select('*').order('created_at', { ascending: false })
@@ -39,6 +77,8 @@ export default function DeudasAhorros() {
       goal: parseFloat(form.goal || 0),
       current: parseFloat(form.current || 0),
       annual_rate: parseFloat(form.annual_rate || 0),
+      charge_day: form.type === 'deuda' && form.charge_day ? parseInt(form.charge_day) : null,
+      monthly_payment: form.type === 'deuda' && form.monthly_payment ? parseFloat(form.monthly_payment) : 0,
       user_id: user.id
     }]).select().single()
 
@@ -147,6 +187,23 @@ export default function DeudasAhorros() {
                 onChange={e => setForm({ ...form, annual_rate: e.target.value })}
                 className="w-full border border-slate-200 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400" />
             </div>
+          )}
+          {form.type === 'deuda' && (
+            <>
+              <div>
+                <label className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-1 block">Cuota mensual (€)</label>
+                <input type="number" step="0.01" min="0" placeholder="Ej: 150.00" value={form.monthly_payment}
+                  onChange={e => setForm({ ...form, monthly_payment: e.target.value })}
+                  className="w-full border border-slate-200 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400" />
+              </div>
+              <div>
+                <label className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-1 block">Día del mes que se carga (1-31)</label>
+                <input type="number" min="1" max="31" placeholder="Ej: 5" value={form.charge_day}
+                  onChange={e => setForm({ ...form, charge_day: e.target.value })}
+                  className="w-full border border-slate-200 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400" />
+                <p className="text-xs text-slate-400 mt-1">Se registrará automáticamente como gasto cada mes.</p>
+              </div>
+            </>
           )}
         </div>
         <button type="submit" disabled={saving}
@@ -289,6 +346,11 @@ export default function DeudasAhorros() {
                       <div>
                         <p className="font-medium text-slate-700 dark:text-slate-200">{item.name}</p>
                         <p className="text-sm font-semibold text-red-500">{current.toFixed(2)} € / {goal.toFixed(2)} €</p>
+                        {item.charge_day && item.monthly_payment > 0 && (
+                          <p className="text-xs text-amber-500 dark:text-amber-400 mt-0.5">
+                            🔄 {Number(item.monthly_payment).toFixed(2)} €/mes · día {item.charge_day}
+                          </p>
+                        )}
                       </div>
                       <div className="flex items-center gap-2">
                         {done && <span className="text-xs bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 px-2 py-0.5 rounded-full font-medium">✓ Pagada</span>}
