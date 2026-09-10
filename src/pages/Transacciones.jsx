@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/Auth'
+import { useCategories } from '../hooks/useCategories'
 import * as XLSX from 'xlsx'
 import { Plus, Trash2, Download, RefreshCw, Search, Upload, Camera } from 'lucide-react'
 
@@ -11,6 +12,7 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 
 export default function Transacciones() {
   const { user } = useAuth()
+  const { allCategories } = useCategories()
   const [transactions, setTransactions] = useState([])
   const [form, setForm] = useState(emptyForm)
   const [loading, setLoading] = useState(true)
@@ -260,7 +262,7 @@ export default function Transacciones() {
             <label className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-1 block">Categoría</label>
             <select value={form.category} onChange={e => setForm({ ...form, category: e.target.value, customCategory: '' })}
               className="w-full border border-slate-200 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400">
-              {CATEGORIAS.map(c => <option key={c}>{c}</option>)}
+              {allCategories.map(c => <option key={c}>{c}</option>)}
             </select>
           </div>
           <div>

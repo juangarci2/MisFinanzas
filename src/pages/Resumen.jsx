@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/Auth'
+import { useCategories } from '../hooks/useCategories'
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell,
   PieChart, Pie, Legend, LineChart, Line, CartesianGrid,
@@ -14,6 +15,7 @@ const WANTS = ['Ocio','Ropa','Educación','Otros']
 
 export default function Resumen() {
   const { user } = useAuth()
+  const { allCategories } = useCategories()
   const [transactions, setTransactions] = useState([])
   const [allTransactions, setAllTransactions] = useState([])
   const [lineData, setLineData] = useState([])
@@ -207,7 +209,7 @@ export default function Resumen() {
             <label className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-1 block">Categoría</label>
             <select value={qaForm.category} onChange={e => setQaForm({ ...qaForm, category: e.target.value, customCategory: '' })}
               className="border border-slate-200 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400">
-              {CATEGORIAS.map(c => <option key={c}>{c}</option>)}
+              {allCategories.map(c => <option key={c}>{c}</option>)}
             </select>
           </div>
           {qaForm.category === 'Otros' && (
